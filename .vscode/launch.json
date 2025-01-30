@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}",
+            "vmArgs": "--module-path /home/COTARELO/dtorres/Downloads/javafx-sdk-21.0.6/lib --add-modules javafx.controls,javafx.fxml,javafx.media"
+        },
+        {
+            "type": "java",
+            "name": "SceneBuilderApp",
+            "request": "launch",
+            "mainClass": "SceneBuilderApp",
+            "projectName": "di-biblioteca-DavidTorresRial_7ce462ac",
+            "vmArgs": "--module-path /home/COTARELO/dtorres/Downloads/javafx-sdk-21.0.6/lib --add-modules javafx.controls,javafx.fxml,javafx.media"
+        }
+    ]
+}

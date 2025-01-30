@@ -8,13 +8,11 @@ public class SceneBuilderApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Cargar el archivo FXML
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("Reproductor.fxml"));
-        Parent root = loader.load(); 
+        // Carga el FXML que está en la MISMA carpeta que esta clase.
+        Parent root = FXMLLoader.load(getClass().getResource("Reproductor.fxml"));
 
-        // Configurar la escena y el escenario principal
-        Scene scene = new Scene(root);
-        primaryStage.setTitle("Reproductor de Videos");
+        Scene scene = new Scene(root, 600, 400);
+        primaryStage.setTitle("Mi App JavaFX");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

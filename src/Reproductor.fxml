@@ -1,6 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Import de los tipos JavaFX que uses en el FXML -->
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
 
+<!-- 
+    fx:controller apunta a la clase 'MainController' 
+    (como está en la misma carpeta y sin paquete).
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="MainController"
+            fx:id="mainBorderPane">
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" />
+    <!-- ***** Zona TOP: Menú y título del archivo ***** -->
+    <top>
+        <VBox>
+            <MenuBar fx:id="menuBar">
+                <menus>
+                    <!-- Menú Archivo -->
+                    <Menu text="Archivo">
+                        <MenuItem text="Abrir..." onAction="#onAbrirArchivo"/>
+                        <MenuItem text="Salir" onAction="#onSalir"/>
+                    </Menu>
+                    <!-- Menú Biblioteca -->
+                    <Menu text="Biblioteca">
+                        <MenuItem text="Actualizar lista" onAction="#onRefrescarBiblioteca"/>
+                    </Menu>
+                    <!-- Menú Ver -->
+                    <Menu text="Ver">
+                        <MenuItem text="Pantalla completa" onAction="#onPantallaCompleta"/>
+                    </Menu>
+                    <!-- Menú Acerca de -->
+                    <Menu text="Acerca de">
+                        <MenuItem text="Acerca de esta App..." onAction="#onAcercaDe"/>
+                    </Menu>
+                </menus>
+            </MenuBar>
+
+            <!-- Etiqueta como “título del archivo” -->
+            <Label fx:id="labelTituloArchivo" text="Título del archivo"
+                   style="-fx-font-size: 16; -fx-padding: 5;" />
+        </VBox>
+    </top>
+
+    <!-- ***** Zona IZQUIERDA: Panel de edición ***** -->
+    <left>
+        <VBox fx:id="panelEdicion" prefWidth="200" spacing="10" alignment="TOP_CENTER"
+              style="-fx-padding: 10;">
+            <Label text="Panel de edición" style="-fx-font-weight: bold;" />
+            <Button text="Cambiar Tamaño" onAction="#onCambiarTamaño" />
+            <Button text="Cambiar Velocidad" onAction="#onCambiarVelocidad" />
+        </VBox>
+    </left>
+
+    <!-- ***** Zona CENTRO: Reproductor de medios ***** -->
+    <center>
+        <StackPane fx:id="mediaContainer">
+            <MediaView fx:id="mediaView" preserveRatio="true" />
+        </StackPane>
+    </center>
+
+    <!-- ***** Zona DERECHA: Biblioteca ***** -->
+    <right>
+        <VBox fx:id="panelBiblioteca" prefWidth="200" spacing="10" alignment="TOP_CENTER"
+              style="-fx-padding: 10;">
+            <Label text="Biblioteca" style="-fx-font-weight: bold;" />
+            <ListView fx:id="listaArchivos" />
+        </VBox>
+    </right>
+
+    <!-- ***** Zona INFERIOR: Controles de reproducción ***** -->
+    <bottom>
+        <HBox spacing="20" alignment="CENTER" style="-fx-padding: 10;">
+            <Button fx:id="btnPlay"  text="Play"  onAction="#onPlay"  />
+            <Button fx:id="btnPause" text="Pause" onAction="#onPause" />
+            <Button fx:id="btnStop"  text="Stop"  onAction="#onStop"  />
+        </HBox>
+    </bottom>
+</BorderPane>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="application.MainController" stylesheets="@styles.css">
+    <!-- Superior: Menú y Título -->
+    <top>
+        <VBox>
+            <children>
+                <MenuBar fx:id="menuBar">
+                    <menus>
+                        <Menu text="Archivo">
+                            <items>
+                                <MenuItem text="Abrir" onAction="#handleAbrir"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Salir" onAction="#handleSalir"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Biblioteca">
+                            <items>
+                                <MenuItem text="Refrescar" onAction="#handleRefrescarBiblioteca"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Ver">
+                            <items>
+                                <MenuItem text="Pantalla completa" onAction="#handlePantallaCompleta"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Acerca">
+                            <items>
+                                <MenuItem text="Acerca de" onAction="#handleAcercaDe"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <Label fx:id="fileTitle" text="Sin archivo seleccionado" styleClass="titulo"/>
+            </children>
+        </VBox>
+    </top>
+
+    <!-- Izquierda: Panel de Edición -->
+    <left>
+        <TitledPane text="Edición" expanded="true">
+            <content>
+                <VBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
+                    <children>
+                        <Button text="Cambiar Tamaño" onAction="#handleCambiarTamano" />
+                        <HBox spacing="5" alignment="CENTER">
+                            <children>
+                                <Label text="Velocidad:"/>
+                                <Slider fx:id="speedSlider" min="0.5" max="2.0" value="1.0" onMouseReleased="#handleCambiarVelocidad"/>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </content>
+        </TitledPane>
+    </left>
+
+    <!-- Derecha: Panel de Biblioteca -->
+    <right>
+        <TitledPane text="Biblioteca" expanded="true">
+            <content>
+                <TableView fx:id="tableLibrary">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="120" />
+                        <TableColumn fx:id="colFormato" text="Formato" prefWidth="70" />
+                        <TableColumn fx:id="colDuracion" text="Duración" prefWidth="70" />
+                    </columns>
+                </TableView>
+            </content>
+        </TitledPane>
+    </right>
+
+    <!-- Centro: Reproductor Multimedia -->
+    <center>
+        <StackPane>
+            <children>
+                <MediaView fx:id="mediaView"/>
+            </children>
+        </StackPane>
+    </center>
+
+    <!-- Inferior: Controles de Reproducción -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
+            <children>
+                <Button text="Play" onAction="#handlePlay"/>
+                <Button text="Pausa" onAction="#handlePause"/>
+                <Button text="Stop" onAction="#handleStop"/>
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

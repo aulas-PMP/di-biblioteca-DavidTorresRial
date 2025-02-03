@@ -10,14 +10,13 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.media.MediaView?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="application.MainController" stylesheets="@styles.css">
+<BorderPane fx:id="borderPane" xmlns:fx="http://javafx.com/fxml" fx:controller="application.MainController" stylesheets="@styles.css">
     <!-- Superior: Menú y Título -->
     <top>
         <VBox>
@@ -39,6 +38,8 @@
                         <Menu text="Ver">
                             <items>
                                 <MenuItem text="Pantalla completa" onAction="#handlePantallaCompleta"/>
+                                <MenuItem text="Ocultar/Mostrar Edición" onAction="#handleToggleLeft"/>
+                                <MenuItem text="Ocultar/Mostrar Biblioteca" onAction="#handleToggleRight"/>
                             </items>
                         </Menu>
                         <Menu text="Acerca">
@@ -55,7 +56,7 @@
 
     <!-- Izquierda: Panel de Edición -->
     <left>
-        <TitledPane text="Edición" expanded="true">
+        <TitledPane fx:id="leftPane" text="Edición" expanded="true" collapsible="false">
             <content>
                 <VBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
                     <children>
@@ -74,7 +75,7 @@
 
     <!-- Derecha: Panel de Biblioteca -->
     <right>
-        <TitledPane text="Biblioteca" expanded="true">
+        <TitledPane fx:id="rightPane" text="Biblioteca" expanded="true" collapsible="false">
             <content>
                 <TableView fx:id="tableLibrary">
                     <columns>
@@ -89,21 +90,27 @@
 
     <!-- Centro: Reproductor Multimedia -->
     <center>
-        <StackPane>
+        <AnchorPane>
             <children>
-                <MediaView fx:id="mediaView"/>
+                <!-- La MediaView se ancla a todos los lados para ocupar el máximo espacio -->
+                <MediaView fx:id="mediaView" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" preserveRatio="false"/>
             </children>
-        </StackPane>
+        </AnchorPane>
     </center>
 
-    <!-- Inferior: Controles de Reproducción -->
+    <!-- Inferior: Barra de Progreso y Controles -->
     <bottom>
-        <HBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
-            <children>
-                <Button text="Play" onAction="#handlePlay"/>
-                <Button text="Pausa" onAction="#handlePause"/>
-                <Button text="Stop" onAction="#handleStop"/>
-            </children>
-        </HBox>
+        <VBox spacing="5" alignment="CENTER">
+            <!-- Barra de progreso para la duración del video -->
+            <Slider fx:id="progressSlider" min="0.0" max="100.0" />
+            <!-- Controles de reproducción -->
+            <HBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
+                <children>
+                    <Button text="Play" onAction="#handlePlay"/>
+                    <Button text="Pausa" onAction="#handlePause"/>
+                    <Button text="Stop" onAction="#handleStop"/>
+                </children>
+            </HBox>
+        </VBox>
     </bottom>
 </BorderPane>

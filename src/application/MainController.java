@@ -49,15 +49,18 @@ public class MainController {
 
     @FXML
     private Slider speedSlider;
+    
+    // Nueva declaración para el control de volumen
+    @FXML
+    private Slider volumeSlider;
 
-    // Nueva barra para la duración del video
+    // Barra de progreso para la reproducción
     @FXML
     private Slider progressSlider;
 
     // Referencias a los paneles laterales
     @FXML
     private TitledPane leftPane;   // Panel de Edición (izquierda)
-
     @FXML
     private TitledPane rightPane;  // Panel de Biblioteca (derecha)
 
@@ -300,6 +303,16 @@ public class MainController {
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    /**
+     * Cambia el volumen de reproducción según el valor del slider.
+     */
+    @FXML
+    public void handleCambiarVolumen(MouseEvent event) {
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(volumeSlider.getValue());
+        }
     }
 
     /**

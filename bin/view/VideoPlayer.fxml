@@ -67,11 +67,19 @@
                                 <Slider fx:id="speedSlider" min="0.5" max="2.0" value="1.0" onMouseReleased="#handleCambiarVelocidad"/>
                             </children>
                         </HBox>
+                        <!-- Nuevo control para el Volumen -->
+                        <HBox spacing="5" alignment="CENTER">
+                            <children>
+                                <Label text="Volumen:"/>
+                                <Slider fx:id="volumeSlider" min="0" max="1" value="0.5" onMouseReleased="#handleCambiarVolumen"/>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
             </content>
         </TitledPane>
     </left>
+
 
     <!-- Derecha: Panel de Biblioteca -->
     <right>

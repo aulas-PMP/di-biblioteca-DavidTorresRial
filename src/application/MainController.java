@@ -6,15 +6,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
@@ -28,6 +24,10 @@ public class MainController {
 
     @FXML
     private BorderPane borderPane; // Contenedor raíz
+
+    // Nuevo: StackPane donde va centrado el video
+    @FXML
+    private StackPane centerPane;
 
     @FXML
     private MediaView mediaView;
@@ -49,44 +49,94 @@ public class MainController {
 
     @FXML
     private Slider speedSlider;
-    
-    // Nueva declaración para el control de volumen
+
     @FXML
     private Slider volumeSlider;
 
-    // Barra de progreso para la reproducción
     @FXML
     private Slider progressSlider;
 
-    // Referencias a los paneles laterales
+    // Paneles laterales izquierdo y derecho
     @FXML
-    private TitledPane leftPane;   // Panel de Edición (izquierda)
+    private TitledPane leftPane;
     @FXML
-    private TitledPane rightPane;  // Panel de Biblioteca (derecha)
+    private TitledPane rightPane;
 
+    // Reproductor
     private MediaPlayer mediaPlayer;
+
+    // Tamaño por defecto para el botón "Cambiar Tamaño"
     private double defaultWidth = 640;
     private double defaultHeight = 360;
-    
+
     // Lista observable para la biblioteca
     private ObservableList<FileInfo> libraryFiles = FXCollections.observableArrayList();
 
+    // Flag para un "modo maximizado" (forzar a ocupar todo el espacio)
+    private boolean maximized = false;
+
     @FXML
     public void initialize() {
-        // Configurar las columnas de la tabla usando propiedades de FileInfo
+        // Configurar columnas de la tabla
         colNombre.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNombre()));
         colFormato.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFormato()));
         colDuracion.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDuracion()));
 
-        // Cargar la biblioteca multimedia (directorio "media")
+        // Cargar biblioteca desde el directorio "media"
         loadLibrary();
 
-        // Listener: al seleccionar un archivo en la tabla se reproduce
-        tableLibrary.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                openFile(newSelection.getFile());
+        // Reproducir al seleccionar un archivo en la tabla
+        tableLibrary.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                openFile(newSel.getFile());
             }
         });
+
+        // Ajustes iniciales de la MediaView
+        mediaView.setPreserveRatio(true);
+        mediaView.setSmooth(true);
+
+        // Escuchamos cambios de tamaño en el StackPane "centerPane" para ajustar el video
+        centerPane.widthProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
+        centerPane.heightProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
+    }
+
+    /**
+     * Método que ajusta el tamaño del video según:
+     *  - si cabe a tamaño original, NO se escala,
+     *  - si no cabe, se reduce para ocupar el máximo,
+     *  - si está en modo "maximized", siempre se ocupa todo el espacio.
+     */
+    private void adjustVideoSize() {
+        if (mediaPlayer == null) return; // Si no hay video cargado, no hacemos nada
+
+        // Dimensiones originales del video
+        double videoWidth = mediaPlayer.getMedia().getWidth();
+        double videoHeight = mediaPlayer.getMedia().getHeight();
+
+        // Espacio disponible en el StackPane
+        double paneWidth = centerPane.getWidth();
+        double paneHeight = centerPane.getHeight();
+
+        if (maximized) {
+            // Si está en modo "maximizado", siempre llena el contenedor
+            mediaView.setFitWidth(paneWidth);
+            mediaView.setFitHeight(paneHeight);
+        } else {
+            // Si NO está maximizado, solo escalar si el video no cabe
+            boolean cabeEnAncho = (videoWidth <= paneWidth);
+            boolean cabeEnAlto = (videoHeight <= paneHeight);
+
+            if (cabeEnAncho && cabeEnAlto) {
+                // Muestra a su tamaño original
+                mediaView.setFitWidth(videoWidth);
+                mediaView.setFitHeight(videoHeight);
+            } else {
+                // Escala para ocupar el máximo (manteniendo aspecto por preserveRatio)
+                mediaView.setFitWidth(paneWidth);
+                mediaView.setFitHeight(paneHeight);
+            }
+        }
     }
 
     /**
@@ -100,7 +150,7 @@ public class MainController {
                     name.toLowerCase().endsWith(".mp4") || name.toLowerCase().endsWith(".mp3"));
             if (files != null) {
                 for (File f : files) {
-                    // Para simplificar, la duración se muestra como "Desconocido"
+                    // Simplificamos: la duración se muestra "Desconocido"
                     String nombre = f.getName();
                     String formato = nombre.substring(nombre.lastIndexOf(".") + 1);
                     String duracion = "Desconocido";
@@ -112,7 +162,7 @@ public class MainController {
     }
 
     /**
-     * Abre un archivo usando un FileChooser.
+     * Abre un archivo con FileChooser.
      */
     @FXML
     private void handleAbrir(ActionEvent event) {
@@ -125,7 +175,7 @@ public class MainController {
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             openFile(file);
-            // Muestra un diálogo no modal con información del archivo
+            // Muestra info del archivo
             Alert infoAlert = new Alert(AlertType.INFORMATION);
             infoAlert.setTitle("Archivo Abierto");
             infoAlert.setHeaderText(null);
@@ -148,23 +198,25 @@ public class MainController {
             mediaPlayer.setAutoPlay(true);
             mediaView.setMediaPlayer(mediaPlayer);
             fileTitle.setText(file.getName());
-            // Ajusta la velocidad según el slider
+
+            // Ajusta la velocidad
             mediaPlayer.setRate(speedSlider.getValue());
 
-            // Configurar la barra de progreso cuando el media esté listo
+            // Cuando el media está listo, configuramos la barra de progreso y ajustamos tamaño
             mediaPlayer.setOnReady(() -> {
                 Duration total = mediaPlayer.getTotalDuration();
                 progressSlider.setMax(total.toSeconds());
+                adjustVideoSize(); // Ajustamos el tamaño la primera vez
             });
 
-            // Actualiza la barra de progreso conforme avanza el video
+            // Sincroniza el slider de progreso
             mediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                 if (!progressSlider.isValueChanging()) {
                     progressSlider.setValue(newTime.toSeconds());
                 }
             });
 
-            // Permite mover la barra para cambiar la posición del video
+            // Permite saltar en la reproducción
             progressSlider.setOnMouseReleased((MouseEvent event) -> {
                 if (mediaPlayer != null) {
                     mediaPlayer.seek(Duration.seconds(progressSlider.getValue()));
@@ -185,7 +237,7 @@ public class MainController {
     }
 
     /**
-     * Muestra la información "Acerca de" en un diálogo modal.
+     * Muestra información "Acerca de".
      */
     @FXML
     private void handleAcercaDe(ActionEvent event) {
@@ -197,7 +249,7 @@ public class MainController {
     }
 
     /**
-     * Refresca la biblioteca recargando los archivos del directorio "media".
+     * Refresca la biblioteca (directorios).
      */
     @FXML
     private void handleRefrescarBiblioteca(ActionEvent event) {
@@ -205,7 +257,7 @@ public class MainController {
     }
 
     /**
-     * Alterna el modo de pantalla completa.
+     * Alterna pantalla completa.
      */
     @FXML
     private void handlePantallaCompleta(ActionEvent event) {
@@ -214,7 +266,7 @@ public class MainController {
     }
 
     /**
-     * Inicia la reproducción.
+     * Play.
      */
     @FXML
     private void handlePlay(ActionEvent event) {
@@ -224,7 +276,7 @@ public class MainController {
     }
 
     /**
-     * Pausa la reproducción.
+     * Pausa.
      */
     @FXML
     private void handlePause(ActionEvent event) {
@@ -234,7 +286,7 @@ public class MainController {
     }
 
     /**
-     * Detiene la reproducción.
+     * Stop.
      */
     @FXML
     private void handleStop(ActionEvent event) {
@@ -244,22 +296,26 @@ public class MainController {
     }
 
     /**
-     * Cambia el tamaño del reproductor (alternando entre un tamaño predeterminado y uno mayor).
+     * Botón "Cambiar Tamaño": en este ejemplo, alterna un tamaño fijo (640x360)
+     * con un "modo maximizado" que ocupa todo el StackPane.
      */
     @FXML
     private void handleCambiarTamano(ActionEvent event) {
-        if (mediaView.getFitWidth() == defaultWidth) {
-            // Ajusta a un tamaño mayor (por ejemplo, restando el ancho de los paneles laterales)
-            mediaView.setFitWidth(mediaView.getScene().getWidth() - 250);
-            mediaView.setFitHeight(mediaView.getScene().getHeight() - 150);
-        } else {
+        // Si ya está en modo maximizado, vuelve a 640x360
+        if (maximized) {
+            maximized = false;
             mediaView.setFitWidth(defaultWidth);
             mediaView.setFitHeight(defaultHeight);
+        } else {
+            // Activa modo maximizado
+            maximized = true;
         }
+        // Reajusta con la lógica general
+        adjustVideoSize();
     }
 
     /**
-     * Cambia la velocidad de reproducción según el valor del slider.
+     * Cambia la velocidad de reproducción según el slider.
      */
     @FXML
     private void handleCambiarVelocidad(MouseEvent event) {
@@ -269,8 +325,7 @@ public class MainController {
     }
 
     /**
-     * Alterna la visibilidad del panel de Edición (izquierdo).
-     * Este método se invoca desde la opción del menú "Ocultar/Mostrar Edición".
+     * Alterna la visibilidad del panel izquierdo (Edición).
      */
     @FXML
     private void handleToggleLeft(ActionEvent event) {
@@ -282,8 +337,7 @@ public class MainController {
     }
 
     /**
-     * Alterna la visibilidad del panel de Biblioteca (derecho).
-     * Este método se invoca desde la opción del menú "Ocultar/Mostrar Biblioteca".
+     * Alterna la visibilidad del panel derecho (Biblioteca).
      */
     @FXML
     private void handleToggleRight(ActionEvent event) {
@@ -306,7 +360,7 @@ public class MainController {
     }
 
     /**
-     * Cambia el volumen de reproducción según el valor del slider.
+     * Cambia el volumen según el slider.
      */
     @FXML
     public void handleCambiarVolumen(MouseEvent event) {
@@ -316,13 +370,13 @@ public class MainController {
     }
 
     /**
-     * Clase interna que modela la información de cada archivo multimedia en la biblioteca.
+     * Clase interna para modelar la información de cada archivo en la biblioteca.
      */
     public static class FileInfo {
-        private String nombre;
-        private String formato;
-        private String duracion;
-        private File file;
+        private final String nombre;
+        private final String formato;
+        private final String duracion;
+        private final File file;
 
         public FileInfo(String nombre, String formato, String duracion, File file) {
             this.nombre = nombre;

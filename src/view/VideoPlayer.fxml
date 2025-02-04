@@ -10,14 +10,17 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.media.MediaView?>
 
-<BorderPane fx:id="borderPane" xmlns:fx="http://javafx.com/fxml" fx:controller="application.MainController" stylesheets="@styles.css">
-    <!-- Superior: Menú y Título -->
+<BorderPane fx:id="borderPane" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="application.MainController"
+            stylesheets="@styles.css">
+
+    <!-- ========== Zona superior: Menú y Título ========== -->
     <top>
         <VBox>
             <children>
@@ -54,20 +57,23 @@
         </VBox>
     </top>
 
-    <!-- Izquierda: Panel de Edición -->
+    <!-- ========== Panel izquierdo: Edición ========== -->
     <left>
         <TitledPane fx:id="leftPane" text="Edición" expanded="true" collapsible="false">
             <content>
                 <VBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
                     <children>
-                        <Button text="Cambiar Tamaño" onAction="#handleCambiarTamano" />
+                        <Button text="Cambiar Tamaño" onAction="#handleCambiarTamano"/>
+                        
+                        <!-- Velocidad de reproducción -->
                         <HBox spacing="5" alignment="CENTER">
                             <children>
                                 <Label text="Velocidad:"/>
                                 <Slider fx:id="speedSlider" min="0.5" max="2.0" value="1.0" onMouseReleased="#handleCambiarVelocidad"/>
                             </children>
                         </HBox>
-                        <!-- Nuevo control para el Volumen -->
+                        
+                        <!-- Volumen -->
                         <HBox spacing="5" alignment="CENTER">
                             <children>
                                 <Label text="Volumen:"/>
@@ -80,38 +86,35 @@
         </TitledPane>
     </left>
 
-
-    <!-- Derecha: Panel de Biblioteca -->
+    <!-- ========== Panel derecho: Biblioteca ========== -->
     <right>
         <TitledPane fx:id="rightPane" text="Biblioteca" expanded="true" collapsible="false">
             <content>
                 <TableView fx:id="tableLibrary">
                     <columns>
-                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="120" />
-                        <TableColumn fx:id="colFormato" text="Formato" prefWidth="70" />
-                        <TableColumn fx:id="colDuracion" text="Duración" prefWidth="70" />
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="120"/>
+                        <TableColumn fx:id="colFormato" text="Formato" prefWidth="70"/>
+                        <TableColumn fx:id="colDuracion" text="Duración" prefWidth="70"/>
                     </columns>
                 </TableView>
             </content>
         </TitledPane>
     </right>
 
-    <!-- Centro: Reproductor Multimedia -->
+    <!-- ========== Zona central: Reproductor de video en StackPane centrado ========== -->
     <center>
-        <AnchorPane>
-            <children>
-                <!-- La MediaView se ancla a todos los lados para ocupar el máximo espacio -->
-                <MediaView fx:id="mediaView" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" preserveRatio="false"/>
-            </children>
-        </AnchorPane>
+        <StackPane fx:id="centerPane" alignment="CENTER">
+            <!-- La MediaView, centrada y con preserveRatio para mantener aspecto -->
+            <MediaView fx:id="mediaView" preserveRatio="true"/>
+        </StackPane>
     </center>
 
-    <!-- Inferior: Barra de Progreso y Controles -->
+    <!-- ========== Zona inferior: Barra de progreso y controles de reproducción ========== -->
     <bottom>
         <VBox spacing="5" alignment="CENTER">
-            <!-- Barra de progreso para la duración del video -->
-            <Slider fx:id="progressSlider" min="0.0" max="100.0" />
-            <!-- Controles de reproducción -->
+            <!-- Barra de progreso -->
+            <Slider fx:id="progressSlider" min="0.0" max="100.0"/>
+            <!-- Botones de reproducción -->
             <HBox spacing="10" alignment="CENTER" style="-fx-padding: 10;">
                 <children>
                     <Button text="Play" onAction="#handlePlay"/>

@@ -9,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -20,6 +22,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.File;
+import java.io.InputStream;
 
 public class MainController {
 
@@ -66,6 +69,8 @@ public class MainController {
     // Reproductor
     private MediaPlayer mediaPlayer;
 
+    private ImageView audioImageView;
+
     // Tamaño por defecto para el botón "Cambiar Tamaño"
     private double defaultWidth = 640;
     private double defaultHeight = 360;
@@ -75,83 +80,94 @@ public class MainController {
 
     // Flag para un "modo maximizado" (forzar a ocupar todo el espacio)
     private boolean maximized = false;
+    
+    
+        @FXML
+        public void initialize() {
+            // Configurar columnas de la tabla
+            colNombre.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNombre()));
+            colFormato.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFormato()));
+            colDuracion.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDuracion()));
+    
+            // Cargar biblioteca desde el directorio "media"
+            loadLibrary();
+    
+            // Reproducir al seleccionar un archivo en la tabla
+            tableLibrary.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+                if (newSel != null) {
+                    openFile(newSel.getFile());
+                }
+            });
+    
+            // Ajustes iniciales de la MediaView
+            mediaView.setPreserveRatio(true);
+            mediaView.setSmooth(true);
+    
+            // Escuchamos cambios de tamaño en el StackPane "centerPane" para ajustar el video
+            centerPane.widthProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
+            centerPane.heightProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
+    
+            mediaView.minWidth(640);
+            mediaView.minHeight(360);
+    
+            // Configurar el Label para que se ajuste al ancho y centre su contenido
+            fileTitle.setMaxWidth(Double.MAX_VALUE);
+            fileTitle.setAlignment(Pos.CENTER);
+    
+            // Configurar el ImageView para archivos de audio
+            InputStream imgStream = getClass().getResourceAsStream("img/musica-removebg-preview.png");
+            if (imgStream == null) {
+                System.err.println("No se encontró la imagen en 'img/musica-removebg-preview.png'");
+            } else {
+                ImageView audioImageView = new ImageView(new Image(imgStream));
+                audioImageView.setPreserveRatio(true);
+                audioImageView.setSmooth(true);
+                audioImageView.setVisible(false); // inicialmente no se muestra
+                // Añade el ImageView al centro; como centerPane es un StackPane, los nodos se apilan.
+                centerPane.getChildren().add(audioImageView);
+                // Guarda audioImageView en un atributo de la clase si lo necesitas en otros métodos
+                this.audioImageView = audioImageView;
+        }
 
-    @FXML
-    public void initialize() {
-        // Configurar columnas de la tabla
-        colNombre.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNombre()));
-        colFormato.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFormato()));
-        colDuracion.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDuracion()));
-
-        // Cargar biblioteca desde el directorio "media"
-        loadLibrary();
-
-        // Reproducir al seleccionar un archivo en la tabla
-        tableLibrary.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null) {
-                openFile(newSel.getFile());
-            }
-        });
-
-        // Ajustes iniciales de la MediaView
-        mediaView.setPreserveRatio(true);
-        mediaView.setSmooth(true);
-
-        // Escuchamos cambios de tamaño en el StackPane "centerPane" para ajustar el video
-        centerPane.widthProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
-        centerPane.heightProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
-
-        mediaView.minWidth(640);
-        mediaView.minHeight(360);
-        
-        // Configurar el Label para que se ajuste al ancho y centre su contenido
-        fileTitle.setMaxWidth(Double.MAX_VALUE);
-        fileTitle.setAlignment(Pos.CENTER);
-        
-        // Configuraciones existentes:
-        colNombre.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNombre()));
-        colFormato.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFormato()));
-        colDuracion.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDuracion()));
-        loadLibrary();
+        // Configuraciones existentes (se pueden eliminar duplicados)
+        // Estos setCellValueFactory ya se configuraron al inicio, por lo que puedes eliminarlos si son duplicados
+        // colNombre.setCellValueFactory(...);
+        // colFormato.setCellValueFactory(...);
+        // colDuracion.setCellValueFactory(...);
+        // loadLibrary();
     }
 
-    /**
-     * Método que ajusta el tamaño del video según:
-     *  - si cabe a tamaño original, NO se escala,
-     *  - si no cabe, se reduce para ocupar el máximo,
-     *  - si está en modo "maximized", siempre se ocupa todo el espacio.
-     */
+
     private void adjustVideoSize() {
         if (mediaPlayer == null) return; // Si no hay video cargado, no hacemos nada
-
+    
         // Dimensiones originales del video
         double videoWidth = mediaPlayer.getMedia().getWidth();
         double videoHeight = mediaPlayer.getMedia().getHeight();
-
-        // Espacio disponible en el StackPane
+    
+        // Espacio disponible en el StackPane (la zona central del BorderPane)
         double paneWidth = centerPane.getWidth();
         double paneHeight = centerPane.getHeight();
-
+    
         if (maximized) {
-            // Si está en modo "maximizado", siempre llena el contenedor
+            // En modo maximizado, ocupa todo el centro
             mediaView.setFitWidth(paneWidth);
             mediaView.setFitHeight(paneHeight);
         } else {
-            // Si NO está maximizado, solo escalar si el video no cabe
+            // Si el video cabe en la zona central, se muestra a su tamaño original;
+            // de lo contrario, se escala para ocupar el máximo (manteniendo preserveRatio)
             boolean cabeEnAncho = (videoWidth <= paneWidth);
             boolean cabeEnAlto = (videoHeight <= paneHeight);
-
+    
             if (cabeEnAncho && cabeEnAlto) {
-                // Muestra a su tamaño original
                 mediaView.setFitWidth(videoWidth);
                 mediaView.setFitHeight(videoHeight);
             } else {
-                // Escala para ocupar el máximo (manteniendo aspecto por preserveRatio)
                 mediaView.setFitWidth(paneWidth);
                 mediaView.setFitHeight(paneHeight);
             }
         }
-    }
+    }    
 
     /**
      * Carga los archivos multimedia del directorio "media" en la tabla.
@@ -164,16 +180,56 @@ public class MainController {
                     name.toLowerCase().endsWith(".mp4") || name.toLowerCase().endsWith(".mp3"));
             if (files != null) {
                 for (File f : files) {
-                    // Simplificamos: la duración se muestra "Desconocido"
                     String nombre = f.getName();
                     String formato = nombre.substring(nombre.lastIndexOf(".") + 1);
-                    String duracion = "Desconocido";
-                    libraryFiles.add(new FileInfo(nombre, formato, duracion, f));
+                    // Creamos FileInfo sin duración definida aún
+                    FileInfo info = new FileInfo(nombre, formato, f);
+                    libraryFiles.add(info);
+                    
+                    try {
+                        Media media = new Media(f.toURI().toString());
+                        MediaPlayer tempPlayer = new MediaPlayer(media);
+                        
+                        // Listener para detectar cuando se conoce la duración
+                        tempPlayer.totalDurationProperty().addListener((obs, oldDuration, newDuration) -> {
+                            if(newDuration != null && !newDuration.isUnknown() && newDuration.greaterThan(Duration.ZERO)) {
+                                Platform.runLater(() -> info.setDuracion(formatDuration(newDuration)));
+                                tempPlayer.dispose(); // Liberamos recursos
+                            }
+                        });
+                        
+                        tempPlayer.setOnError(() -> {
+                            Platform.runLater(() -> info.setDuracion("Error"));
+                            tempPlayer.dispose();
+                        });
+                        
+                        // También se puede usar onReady como respaldo
+                        tempPlayer.setOnReady(() -> {
+                            Duration total = tempPlayer.getTotalDuration();
+                            if(total != null && !total.isUnknown() && total.greaterThan(Duration.ZERO)) {
+                                Platform.runLater(() -> info.setDuracion(formatDuration(total)));
+                            } else {
+                                Platform.runLater(() -> info.setDuracion("0:00"));
+                            }
+                            tempPlayer.dispose();
+                        });
+                        
+                    } catch(Exception ex) {
+                        info.setDuracion("Desconocido");
+                    }                    
                 }
             }
         }
         tableLibrary.setItems(libraryFiles);
     }
+    
+    private String formatDuration(Duration duration) {
+        int seconds = (int) Math.floor(duration.toSeconds());
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+     
 
     /**
      * Abre un archivo con FileChooser.
@@ -212,35 +268,55 @@ public class MainController {
             mediaPlayer.setAutoPlay(true);
             mediaView.setMediaPlayer(mediaPlayer);
             fileTitle.setText(file.getName());
-
+    
             // Ajusta la velocidad
             mediaPlayer.setRate(speedSlider.getValue());
-
-            // Cuando el media está listo, configuramos la barra de progreso y ajustamos tamaño
+    
+            // Cuando la media esté lista, configuramos la barra de progreso, verificamos si es audio y ajustamos el tamaño
             mediaPlayer.setOnReady(() -> {
+                // Comprobamos si la media tiene dimensiones válidas (video) o no (audio)
+                double videoWidth = media.getWidth();
+                double videoHeight = media.getHeight();
+                if (videoWidth <= 0 || videoHeight <= 0) {
+                    // Es audio: ocultamos la MediaView y mostramos el audioImageView
+                    mediaView.setVisible(false);
+                    if (audioImageView != null) {
+                        audioImageView.setVisible(true);
+                        // Ajustamos el tamaño de la imagen para que ocupe el espacio del centerPane
+                        audioImageView.setFitWidth(centerPane.getWidth());
+                        audioImageView.setFitHeight(centerPane.getHeight());
+                    }
+                } else {
+                    // Es video: mostramos la MediaView y ocultamos la imagen de audio
+                    mediaView.setVisible(true);
+                    if (audioImageView != null) {
+                        audioImageView.setVisible(false);
+                    }
+                    adjustVideoSize();
+                }
+    
                 Duration total = mediaPlayer.getTotalDuration();
                 progressSlider.setMax(total.toSeconds());
-                adjustVideoSize(); // Ajustamos el tamaño la primera vez
             });
-
+    
             // Sincroniza el slider de progreso
             mediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                 if (!progressSlider.isValueChanging()) {
                     progressSlider.setValue(newTime.toSeconds());
                 }
             });
-
+    
             // Permite saltar en la reproducción
             progressSlider.setOnMouseReleased((MouseEvent event) -> {
                 if (mediaPlayer != null) {
                     mediaPlayer.seek(Duration.seconds(progressSlider.getValue()));
                 }
             });
-
+    
         } catch (Exception e) {
             showError("Error al abrir el archivo", e.getMessage());
         }
-    }
+    }    
 
     /**
      * Cierra la aplicación.
@@ -257,8 +333,8 @@ public class MainController {
     private void handleAcercaDe(ActionEvent event) {
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle("Acerca de");
-        alert.setHeaderText("Biblioteca Multimedia");
-        alert.setContentText("Autor: Pablo Martínez Pavón\nAlumno: [Tu Nombre]");
+        alert.setHeaderText("DaTo Media");
+        alert.setContentText("Profesor: Pablo Martínez Pavón\nAlumno: David Torres Rial");
         alert.showAndWait();
     }
 
@@ -348,29 +424,28 @@ public class MainController {
         }
     }
 
-    /**
-     * Alterna la visibilidad del panel izquierdo (Edición).
-     */
     @FXML
     private void handleToggleLeft(ActionEvent event) {
-        if (borderPane.getLeft() != null) {
-            borderPane.setLeft(null);
-        } else {
-            borderPane.setLeft(leftPane);
-        }
+        boolean actualmenteVisible = leftPane.isVisible();
+        // Alternamos visibilidad y gestión en el layout
+        leftPane.setVisible(!actualmenteVisible);
+        leftPane.setManaged(!actualmenteVisible);
+    
+        // Forzamos la actualización del layout del BorderPane
+        borderPane.requestLayout();
+        // Ejecutamos adjustVideoSize() una vez se complete el layout
+        Platform.runLater(() -> adjustVideoSize());
     }
-
-    /**
-     * Alterna la visibilidad del panel derecho (Biblioteca).
-     */
+    
     @FXML
     private void handleToggleRight(ActionEvent event) {
-        if (borderPane.getRight() != null) {
-            borderPane.setRight(null);
-        } else {
-            borderPane.setRight(rightPane);
-        }
-    }
+        boolean actualmenteVisible = rightPane.isVisible();
+        rightPane.setVisible(!actualmenteVisible);
+        rightPane.setManaged(!actualmenteVisible);
+    
+        borderPane.requestLayout();
+        Platform.runLater(() -> adjustVideoSize());
+    }    
 
     /**
      * Muestra un diálogo de error.
@@ -399,30 +474,39 @@ public class MainController {
     public static class FileInfo {
         private final String nombre;
         private final String formato;
-        private final String duracion;
         private final File file;
-
-        public FileInfo(String nombre, String formato, String duracion, File file) {
+        private final SimpleStringProperty duracion;
+    
+        public FileInfo(String nombre, String formato, File file) {
             this.nombre = nombre;
             this.formato = formato;
-            this.duracion = duracion;
             this.file = file;
+            // Inicialmente mostramos "Cargando..." hasta obtener la duración real.
+            this.duracion = new SimpleStringProperty("Cargando...");
         }
-
+    
         public String getNombre() {
             return nombre;
         }
-
+    
         public String getFormato() {
             return formato;
         }
-
+    
         public String getDuracion() {
+            return duracion.get();
+        }
+        
+        public void setDuracion(String duracion) {
+            this.duracion.set(duracion);
+        }
+        
+        public SimpleStringProperty duracionProperty() {
             return duracion;
         }
-
+    
         public File getFile() {
             return file;
         }
-    }
+    }    
 }

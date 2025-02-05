@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.MouseEvent;
@@ -99,6 +100,19 @@ public class MainController {
         // Escuchamos cambios de tamaño en el StackPane "centerPane" para ajustar el video
         centerPane.widthProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
         centerPane.heightProperty().addListener((obs, oldVal, newVal) -> adjustVideoSize());
+
+        mediaView.minWidth(640);
+        mediaView.minHeight(360);
+        
+        // Configurar el Label para que se ajuste al ancho y centre su contenido
+        fileTitle.setMaxWidth(Double.MAX_VALUE);
+        fileTitle.setAlignment(Pos.CENTER);
+        
+        // Configuraciones existentes:
+        colNombre.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNombre()));
+        colFormato.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFormato()));
+        colDuracion.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDuracion()));
+        loadLibrary();
     }
 
     /**
@@ -262,8 +276,18 @@ public class MainController {
     @FXML
     private void handlePantallaCompleta(ActionEvent event) {
         Stage stage = (Stage) mediaView.getScene().getWindow();
-        stage.setFullScreen(!stage.isFullScreen());
+        // Usamos Platform.runLater para asegurarnos de que el cambio se realice correctamente
+        Platform.runLater(() -> {
+            if (!stage.isFullScreen()) {
+                stage.setFullScreen(true);
+            } else {
+                stage.setFullScreen(false);
+                // Opcionalmente, se puede maximizar la ventana en modo "normal"
+                stage.setMaximized(true);
+            }
+        });
     }
+    
 
     /**
      * Play.
